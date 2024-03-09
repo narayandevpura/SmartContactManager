@@ -16,8 +16,7 @@
 
                     <div th:if="${session.message}" th:classappend="${session.message.type}" class="alert" role="alert">
                         <p th:text="${session.message.content}"></p>
-
-<!--                        <th:block th:text="${session.removeAttribute('message')}"></th:block>-->
+                        <th:block th:text="${@sessionHelper.removeAttributesFromSession('message')}"></th:block>
                     </div>
 
                     <div class="container text-center">
@@ -28,14 +27,18 @@
                         Register Here !!
                     </h1>
 
-                    <form action="" th:action="@{/do_register}" method="post" th:object="${user}">
+                    <form novalidate action="" th:action="@{/do_register}" method="post" th:object="${user}">  <!-- "novalidate" will remove client side validations i.e. browser's own validations will be removed -->
 
                     <!-- name field-->
                         <div class="mb-3">
                             <label for="name_field" class="form-label">Your Name</label>
                             <input name="name" type="text" class="form-control" id="name_field"
                                    placeholder="Enter name here" required
-                            th:value="${user.name}">
+                            th:value="${user.name}" th:classappend="${#fields.hasErrors('name') && agreement ? 'is-invalid' : ''}">
+
+                            <div class="invalid-feedback" th:each="e : ${#fields.errors('name')}" th:text="${e}">
+
+                            </div>
                         </div>
 
                         <!-- email field-->
@@ -43,14 +46,20 @@
                             <label for="email_field" class="form-label">Your Email</label>
                             <input name="email" type="email" class="form-control" id="email_field"
                                    placeholder="Enter email here" required
-                            th:value="${user.email}">
+                            th:value="${user.email}" th:classappend="${#fields.hasErrors('email') && agreement ? 'is-invalid' : ''}">
+
+                            <div class="invalid-feedback" th:each="e : ${#fields.errors('email')}" th:text="${e}">
+
+                            </div>
                         </div>
 
                         <!-- password field-->
                         <div class="mb-3">
                             <label for="password_field" class="form-label">Your Password</label>
                             <input name="password" type="password" class="form-control" id="password_field"
-                                   placeholder="Enter here" required>
+                                   placeholder="Enter here" th:classappend="${#fields.hasErrors('password') && agreement ? 'is-invalid' : ''}" required>
+
+                            <div class="invalid-feedback" th:each="e : ${#fields.errors('password')}" th:text="${e}">
                         </div>
 
                         <!-- about field-->
