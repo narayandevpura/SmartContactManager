@@ -6,6 +6,7 @@ import com.smart.helper.Message;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,6 +17,9 @@ public class HomeController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @RequestMapping("/")
     public String home(Model model) {
@@ -56,6 +60,7 @@ public class HomeController {
             user.setRole("ROLE_USER");
             user.setEnabled(true);
             user.setImageUrl("default.png");
+            user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 
 //        System.out.println("Agreement" + agreement);
 //        System.out.println("USER" + user);
@@ -73,6 +78,12 @@ public class HomeController {
             session.setAttribute("message", new Message("Something went wrong !!"+e.getMessage(), "alert-danger"));
             return "signup";
         }
+    }
+
+    @GetMapping("/signin")
+    public String customLogin(Model model) {
+        model.addAttribute("title", "Login - Smart Contact Manager");
+        return "login";
     }
 }
 
