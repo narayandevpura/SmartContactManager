@@ -1,6 +1,10 @@
 package com.smart.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,12 +16,20 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
+
+    @NotBlank(message = "Name is required")
+    @Size(min = 3, max = 50, message = "Name should be minimum 3 characters and maximum 50")
     private String name;
 
+    @NotBlank(message = "Email is required")
+    @Email(message = "Please enter valid email address")
     @Column(unique = true)
     private String email;
 
+    @NotBlank(message = "Password is required")
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])(?=.*[a-z]).{8,}$", message = "Password should contain atleast 8 characters with 1 uppercase letter, i lowercase letter, 1 special character")
     private String password;
+
     private String role;
     private String imageUrl;
 
