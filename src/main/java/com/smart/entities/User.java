@@ -38,7 +38,7 @@ public class User {
 
     private boolean enabled;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user", orphanRemoval = true) /* orphanRemoval = true  is added as delete was making issue in bidirectional mapping and using it delete operation got resolved */
     private List<Contact> contacts = new ArrayList<>();
 
     public User() {
