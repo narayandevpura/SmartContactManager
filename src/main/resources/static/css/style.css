@@ -80,3 +80,9 @@ body{
     font-size: 36px;
     cursor: pointer;
 }
+.my_profile_picture {
+    height: 30px;
+    width: 30px;
+    object-fit: cover;
+    border-radius: 50%;
+}

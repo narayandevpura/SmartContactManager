@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.Principal;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/user")
@@ -69,7 +70,8 @@ public class UserController {
             /* processing multipart file */
 
             if (multipartFile.isEmpty()) {
-
+                /* setting default_image for contacts if no image is selected */
+                contact.setImage("default_image.png");
             } else {
                 contact.setImage(multipartFile.getOriginalFilename());
                 File file = new ClassPathResource("static/img").getFile();
@@ -103,5 +105,35 @@ public class UserController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", contacts.getTotalPages());
         return "normal/show_contacts";
+    }
+
+    @GetMapping("/{cId}/view_contact_info")
+    public String showContactDetail(@PathVariable("cId") Integer cId, Model model, Principal principal) {
+        Optional<Contact> contactOptional = contactRepository.findById(cId);
+        Contact contact = contactOptional.get();
+
+        String username = principal.getName();
+        User user = userRepository.getUserByUserName(username);
+
+        if (user.getId() == contact.getUser().getId()) {
+            model.addAttribute("title", "Contact Detail");
+            model.addAttribute("contact", contact);
+        }
+        else {
+            model.addAttribute("title", "Error");
+        }
+
+        return "normal/contact_detail";
+    }
+
+    @GetMapping("/delete/{cId}")
+    public String deleteContact(@PathVariable("cId") Integer cId, Model model, Principal principal) {
+        Contact contact = contactRepository.findById(cId).get();
+
+        String username = principal.getName();
+        User user = userRepository.getUserByUserName(username);
+        user.getContacts().remove(contact);
+        userRepository.save(user);
+        return "redirect:/user/show-contacts/0";
     }
 }
