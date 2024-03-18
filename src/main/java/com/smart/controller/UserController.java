@@ -42,6 +42,11 @@ public class UserController {
         User user = userRepository.getUserByUserName(userName);
         System.out.println(user);
 
+        if (user.isEnabled()) {
+            model.addAttribute("status", "ACTIVE");
+        } else {
+            model.addAttribute("status", "DEACTIVE");
+        }
         model.addAttribute("user", user);
     }
 
@@ -71,7 +76,7 @@ public class UserController {
 
             if (multipartFile.isEmpty()) {
                 /* setting default_image for contacts if no image is selected */
-                contact.setImage("default_image.png");
+                contact.setImage("default_profile_image.png");
             } else {
                 contact.setImage(multipartFile.getOriginalFilename());
                 File file = new ClassPathResource("static/img").getFile();
@@ -99,11 +104,15 @@ public class UserController {
 
         String userName = principal.getName();
         User user = userRepository.getUserByUserName(userName);
-        PageRequest pageable = PageRequest.of(page, 1);
+        PageRequest pageable = PageRequest.of(page, 2);
         Page<Contact> contacts = contactRepository.findByUser_id(user.getId(), pageable);
-        model.addAttribute("contacts", contacts);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", contacts.getTotalPages());
+        if(page >= contacts.getTotalPages()) {
+            model.addAttribute("message", new Message("Page index out of scope!!!", "alert-danger"));
+        } else {
+            model.addAttribute("contacts", contacts);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", contacts.getTotalPages());
+        }
         return "normal/show_contacts";
     }
 
@@ -135,5 +144,71 @@ public class UserController {
         user.getContacts().remove(contact);
         userRepository.save(user);
         return "redirect:/user/show-contacts/0";
+    }
+
+    @GetMapping("/update-contact/{cId}")
+    public String updateContact(@PathVariable("cId") Integer cId, Model model, Principal principal) {
+        Contact contact = contactRepository.findById(cId).get();
+        String username = principal.getName();
+        User user = userRepository.getUserByUserName(username);
+
+        if (user.getId() == contact.getUser().getId() && user != null) {
+            model.addAttribute("title", "Update Contact - Smart Contact Manager");
+            model.addAttribute("contact", contact);
+        }
+        else {
+            model.addAttribute("title", "Error");
+            model.addAttribute("message", new Message("You do not have this contact", "alert-danger"));
+        }
+        return "normal/update-form";
+    }
+
+    @PostMapping("/process-update")
+    public String updateHandler(@ModelAttribute Contact contact,
+                                @RequestParam("profileImage") MultipartFile multipartFile,
+                                Principal principal,
+                                HttpSession session) {
+
+        System.out.println(contact);
+
+        Contact oldContact = contactRepository.findById(contact.getcId()).get();
+        try {
+
+            if (!multipartFile.isEmpty()) {
+                // delete old profile pic
+                File deleteFile = new ClassPathResource("static/img").getFile();
+                File deleteFile1 = new File(deleteFile, oldContact.getImage());
+                if (!oldContact.getImage().equals("default_profile_image.png")){
+                    deleteFile1.delete();
+                }
+
+                // update new profile pic
+                File file = new ClassPathResource("static/img").getFile();
+                Path path = Paths.get(file.getAbsolutePath() + File.separator + multipartFile.getOriginalFilename());
+                Files.copy(multipartFile.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                contact.setImage(multipartFile.getOriginalFilename());
+
+            } else {
+                contact.setImage(oldContact.getImage());
+            }
+            String name = principal.getName();
+            User user = userRepository.getUserByUserName(name);
+            contact.setUser(user);
+            contactRepository.save(contact);
+            session.setAttribute("message", new Message("Successfully updated contact !!", "alert-success"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            session.setAttribute("message", new Message("Something went wrong !!", "alert-danger"));
+        }
+
+            return "redirect:/user/" +contact.getcId()+ "/view_contact_info";
+    }
+
+    @GetMapping("/profile")
+    public String yourProfile(Model model) {
+
+        model.addAttribute("title", "User Profile - Smart Contact Manager");
+        return "normal/profile";
     }
 }

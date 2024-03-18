@@ -9,11 +9,13 @@
 </head>
 <body>
 <section>
-
-    <div class="card me-3 ms-3">
+    <div class="card me-3 ms-3" th:if="${contacts}">
         <div class="card-body">
+
             <h1 class="text-center">Your Contacts</h1>
-            <table class="table mt-4">
+        <div class="table-responsive">
+            <table class="table mt-4 table-sm">
+
                 <thead>
                 <tr>
                     <th scope="col">#ID</th>
@@ -23,23 +25,29 @@
                     <th scope="col">Action</th>
                 </tr>
                 </thead>
+
                 <tbody>
 
                 <tr th:each="c : ${contacts}">
-                    <th scope="row" th:text="${'USER' + c.cId}">1</th>
+                    <th scope="row" th:text="${'Contact_' + c.cId}">1</th>
+
                     <td>
                         <img class="my_profile_picture" th:src="@{'/img/' + ${c.image}}" src="" alt="profile photo">
                         <span th:text="${c.name}"></span>
                     </td>
+
                     <td>
                         <a href="#" th:href="@{'/user/' + ${c.cId} + '/view_contact_info'}">
                             <span th:text="${c.email}"></span>
                         </a>
                     </td>
+
                     <td th:text="${c.phone}">@mdo</td>
-                    <td >
+
+                    <td>
                         <button th:onclick="|deleteContact(${c.cId})|" class="btn btn-danger btn-sm">Delete</button>
-                        <button class="btn btn-primary btn-sm">Update</button>
+
+                        <a href="#" th:href="@{'/user/update-contact/' + ${c.cId}}" class="btn btn-primary btn-sm">Update</a>
                     </td>
                 </tr>
 
@@ -56,6 +64,10 @@
             </nav>
 
         </div>
+        </div>
+    </div>
+    <div th:unless="${contacts}" class="container text-center">
+        <h3 th:text="${message.content}"></h3>
     </div>
 
 </section>
