@@ -6,11 +6,19 @@ import com.smart.helper.Message;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 @Controller
 public class HomeController {
@@ -44,7 +52,10 @@ public class HomeController {
     }
 
     @PostMapping("/do_register")
-    public String registerUser(@Valid @ModelAttribute("user") User user, BindingResult bindingResult, @RequestParam(value = "agreement", defaultValue = "false") boolean agreement, Model model, HttpSession session) {
+    public String registerUser(@Valid @ModelAttribute("user") User user, BindingResult bindingResult,
+                               @RequestParam(value = "agreement", defaultValue = "false") boolean agreement,
+                               @RequestParam("userImage") MultipartFile multipartFile,
+                               Model model, HttpSession session) {
 
         try {
             if (!agreement) {
@@ -59,7 +70,20 @@ public class HomeController {
             }
             user.setRole("ROLE_USER");
             user.setEnabled(true);
-            user.setImageUrl("default.png");
+
+            /* processing multipart file */
+
+            if (multipartFile.isEmpty()) {
+                /* setting default_image for contacts if no image is selected */
+                user.setImageUrl("default_profile_image.png");
+            } else {
+                user.setImageUrl(multipartFile.getOriginalFilename());
+                File file = new ClassPathResource("static/img").getFile();
+                Path path = Paths.get(file.getAbsolutePath() + File.separator + multipartFile.getOriginalFilename());
+                Files.copy(multipartFile.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            /* processing ends here */
             user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 
 //        System.out.println("Agreement" + agreement);

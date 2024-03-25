@@ -9,6 +9,10 @@
 </head>
 <body>
 <section>
+    <div th:if="${session.message}" th:classappend="${session.message.type}" class="alert" role="alert">
+        <p th:text="${session.message.content}"></p>
+        <th:block th:text="${@sessionHelper.removeAttributesFromSession('message')}"></th:block>
+    </div>
     <div class="card ms-3 me-3" th:if="${contact}">
         <div class="card-body">
             <div class="container text-center">
@@ -46,7 +50,7 @@
 
             <div class="container text-center mt-5">
                 <button th:onclick="|deleteContact(${contact.cId})|"  class="btn btn-danger btn-sm">Delete</button>
-                <button class="btn btn-primary btn-sm">Update</button>
+                <a href="#" th:href="@{'/user/update-contact/' + ${contact.cId}}" class="btn btn-primary btn-sm">Update</a>
             </div>
         </div>
     </div>

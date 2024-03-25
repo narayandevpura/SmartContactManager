@@ -27,7 +27,7 @@
                         Register Here !!
                     </h1>
 
-                    <form novalidate action="" th:action="@{/do_register}" method="post" th:object="${user}">  <!-- "novalidate" will remove client side validations i.e. browser's own validations will be removed -->
+                    <form novalidate action="" th:action="@{/do_register}" enctype="multipart/form-data" method="post" th:object="${user}">  <!-- "novalidate" will remove client side validations i.e. browser's own validations will be removed -->
 
                     <!-- name field-->
                         <div class="mb-3">
@@ -60,6 +60,8 @@
                                    placeholder="Enter here" th:classappend="${#fields.hasErrors('password') && agreement ? 'is-invalid' : ''}" required>
 
                             <div class="invalid-feedback" th:each="e : ${#fields.errors('password')}" th:text="${e}">
+
+                            </div>
                         </div>
 
                         <!-- about field-->
@@ -67,7 +69,13 @@
                             <label for="about_field" class="form-label">About Yourself</label>
                             <textarea name="about" id="about_field" placeholder="Enter about yourself" class="form-control" rows="10" th:text="${user.about}"></textarea>
                         </div>
-                        <!-- t and c field-->
+
+                        <div class="mb-3">
+                            <input type="file" class="form-control" name="userImage" id="userImage">
+                            <label class="form-label" for="userImage">Upload Image</label>
+                        </div>
+
+                            <!-- t and c field-->
 
                         <div class="form-group form-check">
 
