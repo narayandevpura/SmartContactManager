@@ -1,5 +1,6 @@
 package com.smart.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -25,6 +26,7 @@ public class Contact {
     @Column(length = 50000)
     private String description;
 
+    @JsonIgnore
     @ManyToOne
     private User user;
 
