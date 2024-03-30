@@ -1,8 +1,10 @@
 package com.smart.controller;
 
 import com.smart.dao.UserRepository;
+import com.smart.entities.EmailDetails;
 import com.smart.entities.User;
 import com.smart.helper.Message;
+import com.smart.services.EmailServiceImpl;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,9 @@ public class HomeController {
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Autowired
+    private EmailServiceImpl emailService;
 
     @RequestMapping("/")
     public String home(Model model) {
@@ -109,5 +114,72 @@ public class HomeController {
         model.addAttribute("title", "Login - Smart Contact Manager");
         return "login";
     }
+
+    @GetMapping("/forgot-password")
+    public String forgotPassword(Model model) {
+        model.addAttribute("title", "Forgot Password - Smart Contact Manager");
+        return "forgotpasswordform";
+    }
+
+    @PostMapping("/send-otp")
+    public String sendOTP(@RequestParam("email") String email, Model model, HttpSession session) {
+        EmailDetails emailDetails = new EmailDetails();
+        emailDetails.setRecipient(email);
+        emailDetails.setSubject("One time password to Reser Password");
+        String genOTP = emailService.generateOTP();
+        emailDetails.setMsgBody(genOTP);
+
+        Boolean isSent = emailService.sendSimpleMail(emailDetails);
+        model.addAttribute("isSent", isSent);
+
+        if (isSent) {
+            session.setAttribute("email", email);
+            session.setAttribute("isSent", isSent);
+            session.setAttribute("genOTP", genOTP);
+            session.setAttribute("message", new Message("Otp sent to " + email + " successfully!!!", "alert-success"));
+
+            return "forgotpasswordform";
+        } else {
+            session.setAttribute("isSent", isSent);
+            session.setAttribute("message", new Message("Otp could not be sent", "alert-danger"));
+
+            return "forgotpasswordform";
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public String verifyOTP(@RequestParam("otp") String otp, Model model, HttpSession session) {
+        if (session.getAttribute("genOTP").equals(otp)) {
+            String email = session.getAttribute("email").toString();
+            User userByUserName = userRepository.getUserByUserName(email);
+
+            if (userByUserName==null){
+                session.setAttribute("message", new Message("User with Email id " +email+ " not found!!!", "alert-danger"));
+                return "forgotpasswordform";
+            }
+            if (email.equals(userByUserName.getEmail())){
+                session.setAttribute("message", new Message("OTP verified!!!", "alert-success"));
+                session.setAttribute("userRetrieved", userByUserName);
+                model.addAttribute("resetP", true);
+            }
+
+        } else {
+            session.setAttribute("message", new Message("Invalid OTP!!!", "alert-danger"));
+            model.addAttribute("isSent", true);
+        }
+        return "forgotpasswordform";
+    }
+
+    @PostMapping("/reset-password")
+    public String resetPassword(@RequestParam("newPassword") String password, HttpSession session) {
+        User user = (User) session.getAttribute("userRetrieved");
+
+        System.out.println("user retrieved is :" + user.getName() + ", " + user.getPassword());
+        user.setPassword(bCryptPasswordEncoder.encode(password));
+        userRepository.save(user);
+        session.setAttribute("message", new Message("Password reset successfully!!!", "alert-success"));
+        return "login";
+    }
+
 }
 
